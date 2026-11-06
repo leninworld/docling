@@ -1,0 +1,150 @@
+# PRIVATE PROPOSAL ONLY. Not an execution or public-write approval.
+# g0_runner.py, a reviewed frozen manifest and the exact execution approval are
+# still required. Until they exist, anchor fails closed before any Docker work.
+name: Observe email footer exports
+on:
+  push:
+    branches: [validate-docling5219-observation]
+permissions:
+  contents: read
+jobs:
+  anchor:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    outputs:
+      epoch: ${{ steps.clock.outputs.epoch }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Verify execution authority and anchor the shared G0 clock
+        id: clock
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, os, time
+          from pathlib import Path
+          manifest = Path('manifest.json').read_bytes()
+          approval = json.loads(Path('execution-approval.json').read_text())
+          assert approval['execution_approved'] is True
+          assert approval['manifest_sha256'] == hashlib.sha256(manifest).hexdigest()
+          data = json.loads(manifest)
+          assert data['candidate_code'] is False
+          assert data['sequence'] == ['L1', 'L2', 'L3']
+          assert data['wall_seconds'] == 1200
+          assert os.environ['GITHUB_REPOSITORY'] == 'leninworld/docling'
+          assert os.environ['GITHUB_REF'] == 'refs/heads/validate-docling5219-observation'
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as out:
+              out.write('epoch=' + str(int(time.time())) + '\n')
+          PY
+  reported:
+    needs: anchor
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    outputs:
+      observation: ${{ steps.observe.outputs.observation }}
+      sha256: ${{ steps.observe.outputs.sha256 }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Observe the exact reporter image in owned Docker
+        id: observe
+        env:
+          G0_STARTED_EPOCH: ${{ needs.anchor.outputs.epoch }}
+        run: python3 g0_runner.py --lane L1 --emit-github-output
+  latest:
+    # Actual execution order, not parallel execution followed by ordered reading.
+    needs: [anchor, reported]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    outputs:
+      observation: ${{ steps.observe.outputs.observation }}
+      sha256: ${{ steps.observe.outputs.sha256 }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Resolve and freeze the real latest consumer, then observe in Docker
+        id: observe
+        env:
+          G0_STARTED_EPOCH: ${{ needs.anchor.outputs.epoch }}
+        run: python3 g0_runner.py --lane L2 --emit-github-output
+  main:
+    needs: [anchor, latest]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    outputs:
+      observation: ${{ steps.observe.outputs.observation }}
+      sha256: ${{ steps.observe.outputs.sha256 }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Obtain the reviewed immutable upstream source separately from the harness
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: docling-project/docling
+          ref: 1e26b84c5f5690128ddcd65a20a5d7ffb9e80dcd
+          path: upstream-source
+          persist-credentials: false
+          submodules: false
+          lfs: false
+      - name: Verify actual source identity before Docker imports or builds
+        run: |
+          test "$(git -C upstream-source rev-parse HEAD)" = '1e26b84c5f5690128ddcd65a20a5d7ffb9e80dcd'
+          test -z "$(git -C upstream-source status --porcelain --untracked-files=all)"
+      - name: Observe the immutable current-main source in Docker
+        id: observe
+        env:
+          G0_STARTED_EPOCH: ${{ needs.anchor.outputs.epoch }}
+        run: python3 g0_runner.py --lane L3 --emit-github-output
+  aggregate:
+    if: ${{ always() }}
+    needs: [anchor, reported, latest, main]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Verify bounded synthetic observation receipts in lane order
+        env:
+          G0_STARTED_EPOCH: ${{ needs.anchor.outputs.epoch }}
+          L1_RECEIPT: ${{ needs.reported.outputs.observation }}
+          L1_SHA256: ${{ needs.reported.outputs.sha256 }}
+          L2_RECEIPT: ${{ needs.latest.outputs.observation }}
+          L2_SHA256: ${{ needs.latest.outputs.sha256 }}
+          L3_RECEIPT: ${{ needs.main.outputs.observation }}
+          L3_SHA256: ${{ needs.main.outputs.sha256 }}
+        run: |
+          python3 - <<'PY'
+          import base64, hashlib, json, os
+          from pathlib import Path
+          directory = Path('observations')
+          directory.mkdir(parents=True, exist_ok=False)
+          for lane in ['L1', 'L2', 'L3']:
+              encoded = os.environ.get(lane + '_RECEIPT', '')
+              if not encoded:
+                  data = {'lane': lane, 'state': 'MISSING_OBSERVATION', 'candidate_code': False}
+                  raw = (json.dumps(data) + '\n').encode()
+              else:
+                  assert len(encoded) <= 262144, 'Observation output exceeds declared cap'
+                  raw = base64.b64decode(encoded, validate=True)
+                  assert hashlib.sha256(raw).hexdigest() == os.environ[lane + '_SHA256']
+                  data = json.loads(raw)
+                  assert data['lane'] == lane and data['candidate_code'] is False
+              (directory / (lane + '.json')).write_bytes(raw)
+          PY
+          python3 - <<'PY'
+          import json, os, time
+          from pathlib import Path
+          from assess_observations import assess
+          reports = {lane: json.loads((Path('observations') / (lane + '.json')).read_text()) for lane in ['L1', 'L2', 'L3']}
+          result = assess(reports)
+          epoch = os.environ.get('G0_STARTED_EPOCH', '')
+          if not epoch or time.time() >= float(epoch) + 1200:
+              result.update(admit_candidate=False, state='HOLD_SHARED_G0_DEADLINE')
+          Path('G0-result.json').write_text(json.dumps(result, indent=2) + '\n')
+          print(json.dumps(result))
+          raise SystemExit(0 if result['admit_candidate'] else 22)
+          PY

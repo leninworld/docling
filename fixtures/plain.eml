@@ -1,0 +1,7 @@
+From: Jan Jansen <jan@example.nl>
+To: Piet <piet@example.org>
+Subject: Html only
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+Html: 1 < 2 & 3 > 2, a_b.

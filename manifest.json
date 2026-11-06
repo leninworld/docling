@@ -1,0 +1,74 @@
+{
+  "candidate_code": false,
+  "sequence": [
+    "L1",
+    "L2",
+    "L3"
+  ],
+  "wall_seconds": 1200,
+  "consumer_image": "ghcr.io/astral-sh/uv@sha256:8d1825eb3e41b0142309f4a1c5c7781f072d8c8c9964ea073f34788a030bbeba",
+  "consumer_compressed_bytes": 435819021,
+  "reported_image": "quay.io/docling-project/docling-serve-cpu@sha256:07accda3be8d1ca4c9968be0fb90356a4f5aa390beb1dfd1471459eaaf588bc5",
+  "source_commit": "1e26b84c5f5690128ddcd65a20a5d7ffb9e80dcd",
+  "image_config_digests": {
+    "consumer": "sha256:306fc6194440245ab3b086fe7ed06e9e06fd72d617205b0eca62ad00e6075f72",
+    "reported": "sha256:c8b3fa4ad43907e2cb2aa5250e0a75271d8f82279bc140789b43ccfb8b57fca2"
+  },
+  "consumer_max_compressed_bytes": 524288000,
+  "consumer_environment": {
+    "uv": "0.11.8",
+    "python": "3.12.13",
+    "distro": "Debian trixie",
+    "config_body": "Record actual local inspect before project execution"
+  },
+  "declared_network_hosts": {
+    "source_checkout": [
+      "github.com",
+      "api.github.com",
+      "codeload.github.com"
+    ],
+    "consumer_image": [
+      "ghcr.io",
+      "pkg-containers.githubusercontent.com"
+    ],
+    "reported_image": [
+      "quay.io",
+      "cdn.quay.io",
+      "cdn01.quay.io",
+      "cdn02.quay.io",
+      "cdn03.quay.io"
+    ],
+    "package_proxy_only": [
+      "pypi.org",
+      "files.pythonhosted.org"
+    ],
+    "reachability_only_no_forwarding": [
+      "g0-reachability.invalid"
+    ]
+  },
+  "network_bounds": {
+    "package_encrypted_bytes": 536870912,
+    "package_connections": 128,
+    "image_pulls": "outside package proxy cap; exact digests, each <=300s within shared epoch and disk reserve",
+    "github_checkout": "outside package proxy cap; immutable pins, shared wall envelope"
+  },
+  "candidate_stage_owed": "L4 uv version decision, full dev closure/make validate/affected project tests/installed wheel regression, <=30min and unchanged combined50min/2attempt scope",
+  "latest_consumer": "docling-slim[format-email]==2.148.0",
+  "files": {
+    ".github/workflows/docling-email-observation.yml": "f58b3ed056b35a184501b1db37424cd48dd2a0985a30d145f94a4af1ea96736b",
+    ".gitattributes": "3965c9a2f27d87c374b2f136faef6b2309f36874146845a19c757cb9d415ae92",
+    "tiny_entry.py": "457d2a3d0845b37d0432abbcd63a42054bab92278a677849846fc922532f32cd",
+    "g0_runner.py": "d09dcad82f93c54821ada732cf3c1b7972f51168db76a00037731ec86861bfc5",
+    "g0_https_proxy.py": "4e80717c8d59a17a3b771635d46c7142b54dafab3e39b4c393728711e9016879",
+    "lane_install.py": "04a918a33014bf644b61667c65f1a74c60f31be86e63a30c746fe9a3730e0c26",
+    "observe_email.py": "1406f276e41a41b742c59dae8e09fc45edb5e3afadd307bc38aa335ddd842676",
+    "assess_observations.py": "f1bd0015f1845a8b41efe59265e47b56f892e8de39e456443ad4f6de9252bc12",
+    "tiny_aggregation_fixture.py": "cc65e7837d15e9d5a08c3fa3599ef7d9582e2986c72e4f478551f1d738bbd142",
+    "tiny_proxy_fixture.py": "2687b75294f84e7103a097d0dcee08a59fe0eb877df532ff590cf7da461af153",
+    "tiny_lane_fixture.py": "08e4aa32ccb5eed11de922f1915e957df407e67b23ade2ce9da1b0c62f2e0e18",
+    "fixtures/html-only.eml": "ace593df78186e7ec6abc2ec21f4af0c826b7a3821e50886c3065cda877c9ab6",
+    "fixtures/plain.eml": "c568877bb84626a825b5cb05c78b090e7bfe85c318f337b4fc2c168d8c862746"
+  },
+  "execution_approved": false,
+  "public_write_approved": false
+}

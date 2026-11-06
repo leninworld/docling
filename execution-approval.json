@@ -1,0 +1,11 @@
+{
+  "execution_approved": true,
+  "manifest_sha256": "91bc985f4979f728e4008deb6337758f44e66a238ef293eba1cddc417d09bc1c",
+  "review_result_sha256": "ff3ba19ac2d930d91b171eae0870524ba7406475d8b3983c3d56363f150a15f2",
+  "claude_review_uuid": "936878de-8545-4758-ac91-acf3981e25c4",
+  "claude_duration_ms": 126743,
+  "scope": "One hosted G0 diagnostic run, one new personal-fork orphan branch ordinary push; full P1/P2 conditions apply. No upstream contribution or personal certification.",
+  "codex_agreement": "AGREE for G0 execution and diagnostic write, subject to actual independent preflight.",
+  "production_authoring": "Not exercised; later wording about outer FURNITURE differs from agreed Design B outer TEXT and must be settled if G0 admits candidate. No changed product design inferred.",
+  "lenin_approval_or_legal_certification_claimed": false
+}
